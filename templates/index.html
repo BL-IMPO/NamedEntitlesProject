@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+    <h1>Named Entitles Check</h1>
+    <form method="POST" action="/">
+
+
+        <div class="form-group">
+            <label>Choose your text language:</label>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" id="EN" name="language" value="en" checked>
+                    <label for="EN">EN</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="RU" name="language" value="ru">
+                    <label for="RU">RU</label>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="form-group">
+            <label for="text">Your text:</label>
+            <input type="text" id="text" name="text" required value="{{ previous_text }}">
+        </div>
+
+        <select name="entity_type">
+            <option value="PERSON">Person</option>
+            <option value="ORG">Organization</option>
+            <option value="GPE">Location (Country/City)</option>
+            <option value="DATE">Date</option>
+            <option value="MONEY">Money</option>
+        </select>
+
+        <button type="submit">Submit</button>
+
+    </form>
+
+    <h2>Previous Submissions</h2>
+    {% if submissions %}
+
+        <ul>
+            {% for submission in submissions %}
+            <h3> Chosen option: {{ submission.option }}</h3>
+
+            {% for ent in submission.result %}
+                <li>
+                    <strong>{{ ent }}</strong>
+                </li>
+            {% endfor %}
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No submissions yet.</p>
+    {% endif %}
+
+
+</body>
+</html>
