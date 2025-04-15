@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+    <h1>Named Entitles Check</h1>
+    <form method="POST" action="/">
+
+
+        <div class="form-group">
+            <label>Choose your text language:</label>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" id="EN" name="language" value="en" checked>
+                    <label for="EN">EN</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="RU" name="language" value="ru">
+                    <label for="RU">RU</label>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="form-group">
+            <label for="text">Your text:</label>
+            <input type="text" id="text" name="text" required value="{{ previous_text }}">
+        </div>
+
+        <select name="entity_type">
+            <option value="PER">Person</option>
+            <option value="ORG">Organization</option>
+            <option value="LOC">Location (Country/City)</option>
+            <option value="DATE">Date</option>
+            <option value="MONEY">Money</option>
+        </select>
+
+
+
+        <label>
+            <input type="checkbox" name="methods" value="all" checked> All
+        </label>
+        <label>
+            <input type="checkbox" name="methods" value="spacy"> spacy
+        </label>
+        <label>
+            <input type="checkbox" name="methods" value="nltk"> spacy
+        </label>
+
+
+        <button type="submit">Submit</button>
+
+    </form>
+
+    <h2>Previous Submissions</h2>
+
+    {% if 'spacy' in methods or 'all' in methods %}
+        {% if spacy_results %}
+
+            <ul>
+                {% for text in spacy_results %}
+                <h3> Chosen option: {{ text.option }}</h3>
+
+                {% for ent in text.result %}
+                    <li>
+                        <strong>{{ ent }}</strong>
+                    </li>
+                {% endfor %}
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+    {% else %}
+        <p>No methods yet.</p>
+
+    {% endif %}
+
+    {% if 'nltk' in methods or 'all' in methods %}
+        {% if nltk_results %}
+
+            <ul>
+                {% for text in nltk_results %}
+                <h3> Chosen option: {{ text.option }}</h3>
+
+                {% for ent in text.result %}
+                    <li>
+                        <strong>{{ ent }}</strong>
+                    </li>
+                {% endfor %}
+                {% endfor %}
+            </ul>
+
+        {% endif %}
+
+    {% else %}
+        <p>No methods yet.</p>
+
+    {% endif %}
+
+</body>
+</html>
