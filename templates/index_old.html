@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Named Entities Check</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h1 class="h4 mb-0">Named Entities Check</h1>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="/">
+                            <div class="mb-3">
+                                <label class="form-label">Choose your text language:</label>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" id="EN" name="language" value="en" checked>
+                                        <label class="form-check-label" for="EN">EN</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" id="RU" name="language" value="ru">
+                                        <label class="form-check-label" for="RU">RU(SpaCy only)</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="text" class="form-label">Your text:</label>
+                                <input type="text" class="form-control" id="text" name="text" required value="{{ previous_text }}">
+                            </div>
+
+                            <!-- Entity types selection -->
+                            <div class="mb-4">
+                                <label class="form-label">Entity Types:</label>
+                                <div class="d-flex gap-3 flex-wrap">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="entities_button" value="all" checked id="all_entities">
+                                        <label class="form-check-label" for="all_entities">All</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="entities_button" value="PER" id="PER">
+                                        <label class="form-check-label" for="PER">Person</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="entities_button" value="ORG" id="ORG">
+                                        <label class="form-check-label" for="ORG">Organization</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="entities_button" value="GPE" id="GPE">
+                                        <label class="form-check-label" for="GPE">Location (Country/City)</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="entities_button" value="DATE" id="DATE">
+                                        <label class="form-check-label" for="DATE">Date</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="entities_button" value="MONEY" id="MONEY">
+                                        <label class="form-check-label" for="MONEY">Money</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Methods selection -->
+                            <div class="mb-4">
+                                <label class="form-label">Methods:</label>
+                                <div class="d-flex gap-3 flex-wrap">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="methods_button" value="all" checked id="all_methods">
+                                        <label class="form-check-label" for="all_methods">All</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="methods_button" value="spacy" id="spacy">
+                                        <label class="form-check-label" for="spacy">spaCy</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="methods_button" value="nltk" id="nltk">
+                                        <label class="form-check-label" for="nltk">NLTK</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="methods_button" value="transformer_results" id="transformer_results">
+                                        <label class="form-check-label" for="transformer_results">Hugging Face Transformer</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                {% if methods_button %}
+                <div class="card shadow mt-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h2 class="h4 mb-0">Results</h2>
+                    </div>
+                    <div class="card-body">
+                        <!-- spaCy Results -->
+                        {% if 'spacy' in methods_button and spacy_results %}
+                        <div class="mb-4">
+                            <h4 class="text-primary">spaCy Results</h4>
+                            {% for ent_type, entities in spacy_results.items() %}
+                                {% if entities %}
+                                <div class="mb-3">
+                                    <h5 class="text-muted">{{ ent_type }}</h5>
+                                    <ul class="list-group">
+                                        {% for ent in entities %}
+                                            <li class="list-group-item">{{ ent }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- NLTK Results -->
+                        {% if 'nltk' in methods_button and nltk_results %}
+                        <div class="mb-4">
+                            <h4 class="text-success">NLTK Results</h4>
+                            {% for ent_type, entities in nltk_results.items() %}
+                                {% if entities %}
+                                <div class="mb-3">
+                                    <h5 class="text-muted">{{ ent_type }}</h5>
+                                    <ul class="list-group">
+                                        {% for ent in entities %}
+                                            <li class="list-group-item">{{ ent }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Transformer Results -->
+                        {% if 'transformer_results' in methods_button and transformer_results %}
+                        <div class="mb-4">
+                            <h4 class="text-warning">Hugging Face Transformer Results</h4>
+                            {% for ent_type, entities in transformer_results.items() %}
+                                {% if entities %}
+                                <div class="mb-3">
+                                    <h5 class="text-muted">{{ ent_type }}</h5>
+                                    <ul class="list-group">
+                                        {% for ent in entities %}
+                                            <li class="list-group-item">{{ ent }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Handle "All" checkbox behavior for entities
+        document.getElementById('all_entities').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('input[name="entities_button"]:not([value="all"])');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+                checkbox.disabled = this.checked;
+            });
+        });
+
+        // Handle "All" checkbox behavior for methods
+        document.getElementById('all_methods').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('input[name="methods_button"]:not([value="all"])');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+                checkbox.disabled = this.checked;
+            });
+        });
+
+        // Initialize disabled state based on "All" checkbox
+        document.addEventListener('DOMContentLoaded', function() {
+            const allEntitiesChecked = document.getElementById('all_entities').checked;
+            const entityCheckboxes = document.querySelectorAll('input[name="entities_button"]:not([value="all"])');
+            entityCheckboxes.forEach(checkbox => {
+                checkbox.disabled = allEntitiesChecked;
+            });
+
+            const allMethodsChecked = document.getElementById('all_methods').checked;
+            const methodCheckboxes = document.querySelectorAll('input[name="methods_button"]:not([value="all"])');
+            methodCheckboxes.forEach(checkbox => {
+                checkbox.disabled = allMethodsChecked;
+            });
+        });
+    </script>
+</body>
+</html>

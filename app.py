@@ -2,19 +2,40 @@ from flask import Flask, render_template, request, redirect, url_for
 import spacy
 from nltk import ne_chunk, pos_tag, word_tokenize
 from nltk.tree import Tree
-
+from transformers import pipeline
 
 app = Flask(__name__)
 
 
+def transformers_result(text, option, language):
+    # Map language to appropriate model
+    if language != 'en':
+        return ['Hugging face(Bert RoBerta) works with Russian not properly.']
+
+    model_name = "dslim/bert-base-NER"  # English NER model
+
+    # Create NER pipeline
+    ner_pipeline = pipeline("ner", model=model_name, aggregation_strategy="simple")
+
+    # Process text
+    entities = ner_pipeline(text)
+    result = []
+
+    # Filter entities by the requested type
+    for entity in entities:
+        if entity['entity_group'] == option:
+            result.append(entity['word'])
+
+    return result
+
+
 def nltk_result(text, option, language='en'):
     # NLTK's NER is primarily English-only (Russian support is limited)
-    # Map our option to NLTK's entity labels
     if language != 'en':
-        return ['NLTK works with russian not properly.']
+        return ['NLTK works with Russian not properly.']
 
     option_map = {
-        'PERSON': 'PERSON',
+        'PER': 'PERSON',
         'ORG': 'ORGANIZATION',
         'GPE': 'GPE',  # Geo-Political Entity
         'DATE': 'DATE',
@@ -22,8 +43,6 @@ def nltk_result(text, option, language='en'):
     }
 
     nltk_label = option_map.get(option)
-    # if not nltk_label:
-    #    raise ValueError(f"Unsupported entity type: {option}")
 
     # Tokenize and tag
     tokens = word_tokenize(text)
@@ -63,23 +82,57 @@ def spacy_result(text, option, language):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    nltk_results = []
-    spacy_results = []
+    nltk_results = {}
+    spacy_results = {}
+    transformer_results = {}
     text = ''
+    methods_button = []
+
     if request.method == 'POST':
         language = request.form.get('language')
         text = request.form.get('text')
-        option_of_named_entitle = request.form.get('entity_type')
+        entity_options = request.form.getlist('entities_button')
+        methods_button = request.form.getlist('methods_button')
 
-        methods = request.form.getlist('methods')
+        # Handle "All" selection for entities
+        if 'all' in entity_options or not entity_options:
+            entity_options = ['PER', 'ORG', 'GPE', 'DATE', 'MONEY']
 
-        s_result = spacy_result(text, option_of_named_entitle, language)
-        n_result = nltk_result(text, option_of_named_entitle, language)
+        # Handle "All" selection for methods
+        if 'all' in methods_button or not methods_button:
+            methods_button = ['spacy', 'nltk', 'transformer_results']
 
-        spacy_results.append({'option': option_of_named_entitle, 'result': s_result})
-        nltk_results.append({'option': option_of_named_entitle, 'result': n_result})
+        # Process each selected method
+        if 'spacy' in methods_button:
+            spacy_results = {}
+            for entity in entity_options:
+                result = spacy_result(text, entity, language)
+                if result:  # Only add if we found something
+                    spacy_results[entity] = result
 
-    return render_template('index.html', spacy_results=spacy_results, nltk_results=nltk_results, previous_text=text, methods=methods)
+        if 'nltk' in methods_button:
+            nltk_results = {}
+            for entity in entity_options:
+                result = nltk_result(text, entity, language)
+                if result:
+                    nltk_results[entity] = result
+
+        if 'transformer_results' in methods_button:
+            transformer_results = {}
+            for entity in entity_options:
+                if language == 'en':  # Transformer only works well with English
+                    result = transformers_result(text, entity, language)
+                    if result:
+                        transformer_results[entity] = result
+                else:
+                    transformer_results[entity] = ['Hugging face(Bert RoBerta) works with Russian not properly.']
+
+    return render_template('index_old.html',
+                           spacy_results=spacy_results,
+                           nltk_results=nltk_results,
+                           transformer_results=transformer_results,
+                           previous_text=text,
+                           methods_button=methods_button)
 
 
 if __name__ == "__main__":
